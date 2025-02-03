@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TalentTrack - Model Monitoring</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav>
+        <a href="/">Home</a>
+        <a href="/talent_pool">Talent Pool</a>
+        <a href="/model_analysis">Model Analysis</a>
+        <a href="/model_monitoring">Model Monitoring</a>
+    </nav>
+    <div class="container">
+        <h1>Model Monitoring</h1>
+        
+        <div class="monitoring-grid">
+            <div class="drift-detection">
+                <h2>Drift Detection</h2>
+                <img id="drift-viz" alt="Drift Detection">
+                <div id="drift-metrics"></div>
+            </div>
+
+            <div class="confusion-matrix">
+                <h2>Confusion Matrix</h2>
+                <img id="confusion-matrix-viz" alt="Confusion Matrix">
+            </div>
+
+            <div class="roc-curve">
+                <h2>ROC Curve</h2>
+                <img id="roc-curve-viz" alt="ROC Curve">
+            </div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/model_monitoring.js') }}"></script>
+</body>
+</html>

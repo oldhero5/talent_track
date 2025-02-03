@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TalentTrack - Geographic Analysis</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav>
+        <a href="/">Home</a>
+        <a href="/talent_pool">Talent Pool</a>
+        <a href="/geography">Geography</a>
+        <a href="/pipeline">Pipeline</a>
+    </nav>
+    <div class="container">
+        <h1>Geographical Distribution</h1>
+        <div id="geography-viz" class="visualization" style="height: 600px;"></div>
+    </div>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        window.onload = loadGeography;
+    </script>
+</body>
+</html>

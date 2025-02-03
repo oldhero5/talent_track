@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TalentTrack - Recruitment Pipeline</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav>
+        <a href="/">Home</a>
+        <a href="/talent_pool">Talent Pool</a>
+        <a href="/geography">Geography</a>
+        <a href="/pipeline">Pipeline</a>
+    </nav>
+    <div class="container">
+        <h1>Recruitment Pipeline</h1>
+        <div class="visualization">
+            <img id="pipeline-viz" alt="Pipeline Visualization" style="max-width: 100%;">
+        </div>
+        <div class="stats">
+            <h3>Pipeline Statistics</h3>
+            <div id="pipeline-stats"></div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        window.onload = loadPipeline;
+    </script>
+</body>
+</html>

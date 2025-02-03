@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TalentTrack - Model Analysis</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+</head>
+<body>
+    <nav>
+        <a href="/">Home</a>
+        <a href="/talent_pool">Talent Pool</a>
+        <a href="/model_analysis">Model Analysis</a>
+        <a href="/model_monitoring">Model Monitoring</a>
+    </nav>
+    <div class="container">
+        <h1>Model Analysis</h1>
+        
+        <div class="analysis-grid">
+            <div class="candidates-table">
+                <h2>Candidates</h2>
+                <table id="candidates-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Experience</th>
+                            <th>PQ Score</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+
+            <div class="model-shap">
+                <h2>Model SHAP Values</h2>
+                <img id="model-shap-viz" alt="Model SHAP Values">
+            </div>
+
+            <div class="candidate-shap">
+                <h2>Candidate SHAP Values</h2>
+                <div id="candidate-shap-content">
+                    Select a candidate to view their SHAP values
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="{{ url_for('static', filename='js/model_analysis.js') }}"></script>
+</body>
+</html>

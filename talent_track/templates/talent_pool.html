@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TalentTrack - Talent Pool</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <nav>
+        <a href="/">Home</a>
+        <a href="/talent_pool">Talent Pool</a>
+        <a href="/model_analysis">Model Analysis</a>
+        <a href="/model_monitoring">Model Monitoring</a>
+    </nav>
+    <div class="container">
+        <h1>Talent Pool Visualization</h1>
+        
+        <div class="filters">
+            <div class="filter-group">
+                <label for="status">Status:</label>
+                <select id="status" onchange="updateVisualization()">
+                    <option value="all">All</option>
+                    <option value="screening">Screening</option>
+                    <option value="interview">Interview</option>
+                    <option value="offer_extended">Offer Extended</option>
+                    <option value="rejected">Rejected</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label>Experience (months):</label>
+                <input type="number" id="min_exp" placeholder="Min" onchange="updateVisualization()">
+                <input type="number" id="max_exp" placeholder="Max" onchange="updateVisualization()">
+            </div>
+        </div>
+
+        <div class="visualization">
+            <div id="talent-pool-viz"></div>
+        </div>
+
+        <div id="candidate-details" class="details-panel">
+            <h3>Candidate Details</h3>
+            <div id="details-content"></div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/talent_pool.js') }}"></script>
+</body>
+</html>
