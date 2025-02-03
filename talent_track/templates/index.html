@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TalentTrack - Recruitment Analytics</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav>
+        <a href="/">Home</a>
+        <a href="/talent_pool">Talent Pool</a>
+        <a href="/geography">Geography</a>
+        <a href="/pipeline">Pipeline</a>
+    </nav>
+    <div class="container">
+        <h1>Recruitment Analysis Dashboard</h1>
+        <div class="dashboard-grid">
+            <div class="card">
+                <h2>Quick Stats</h2>
+                <p>Current Employees: {{ current_employees|length }}</p>
+                <p>Active Leads: {{ leads|length }}</p>
+                <a href="/talent_pool" class="button">View Talent Pool</a>
+            </div>
+            <div class="card">
+                <h2>Geographical Distribution</h2>
+                <a href="/geography" class="button">View Map</a>
+            </div>
+            <div class="card">
+                <h2>Recruitment Pipeline</h2>
+                <a href="/pipeline" class="button">View Pipeline</a>
+            </div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
