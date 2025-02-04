@@ -14,6 +14,10 @@ import seaborn as sns
 from flask import Flask, render_template, jsonify, request
 from sklearn.metrics import roc_curve, auc, confusion_matrix
 
+from geopy.geocoders import Nominatim
+from geopy.exc import GeocoderTimedOut
+import time  # for rate limiting
+
 from talent_track.functions import (
     DataGenerator, PQModel, FeedbackTracker, ModelExplainer, 
     RecruitmentVisualizer, DriftDetector
@@ -309,22 +313,80 @@ def register_routes(app):
     def geography():
         return render_template('geography.html')
 
-    # New endpoints for user input (feedback, add candidate)
-    @app.route('/api/feedback', methods=['POST'])
-    def post_feedback():
+    @app.route('/api/geography_data')
+    def get_geography_data():
         try:
-            data = request.get_json()
-            candidate_id = data.get('candidate_id')
-            stage = data.get('stage')
-            status = data.get('status')
-            notes = data.get('notes')
-            if not candidate_id or not stage or not status:
-                return jsonify({'error': 'Missing required fields'}), 400
-            feedback = app.data_store.feedback_tracker.add_feedback(candidate_id, stage, status, notes)
-            return jsonify({'message': 'Feedback received', 'feedback': feedback}), 200
+            # Combine employees and leads
+            employees = app.data_store.current_employees.copy()
+            leads = app.data_store.leads.copy()
+            combined_data = pd.concat([employees, leads])
+            
+            # Calculate PQ scores for quality measurement
+            combined_data['quality_score'] = app.data_store.pq_model.predict(combined_data)
+            
+            # Group by location and calculate metrics
+            location_metrics = combined_data.groupby('location').agg({
+                'id': 'count',  # Number of candidates
+                'quality_score': ['mean', 'max']  # Quality metrics
+            }).reset_index()
+            
+            # Flatten column names
+            location_metrics.columns = ['location', 'candidate_count', 'avg_quality', 'max_quality']
+            
+            # Get coordinates for each location using the geocoder
+            geolocator = Nominatim(user_agent="talent_track")
+            
+            def get_coordinates(location):
+                try:
+                    location_data = geolocator.geocode(location)
+                    if location_data:
+                        return {'lat': location_data.latitude, 'lng': location_data.longitude}
+                    return None
+                except GeocoderTimedOut:
+                    return None
+            
+            # Add coordinates to the metrics
+            coordinates = []
+            for location in location_metrics['location']:
+                coords = get_coordinates(location)
+                if coords:
+                    coordinates.append(coords)
+                else:
+                    coordinates.append({'lat': None, 'lng': None})
+            
+            location_metrics['coordinates'] = coordinates
+            
+            # Filter out locations without coordinates
+            location_metrics = location_metrics.dropna(subset=['coordinates'])
+            
+            # Prepare the response data
+            response_data = {
+                'locations': location_metrics.to_dict('records'),
+                'max_count': float(location_metrics['candidate_count'].max()),
+                'max_quality': float(location_metrics['avg_quality'].max())
+            }
+            
+            return jsonify(response_data)
         except Exception as e:
-            print(f"Error in post_feedback: {str(e)}")
+            print(f"Error in get_geography_data: {str(e)}")
             return jsonify({'error': str(e)}), 500
+
+        # New endpoints for user input (feedback, add candidate)
+        @app.route('/api/feedback', methods=['POST'])
+        def post_feedback():
+            try:
+                data = request.get_json()
+                candidate_id = data.get('candidate_id')
+                stage = data.get('stage')
+                status = data.get('status')
+                notes = data.get('notes')
+                if not candidate_id or not stage or not status:
+                    return jsonify({'error': 'Missing required fields'}), 400
+                feedback = app.data_store.feedback_tracker.add_feedback(candidate_id, stage, status, notes)
+                return jsonify({'message': 'Feedback received', 'feedback': feedback}), 200
+            except Exception as e:
+                print(f"Error in post_feedback: {str(e)}")
+                return jsonify({'error': str(e)}), 500
 
     @app.route('/api/add_candidate', methods=['POST'])
     def add_candidate():

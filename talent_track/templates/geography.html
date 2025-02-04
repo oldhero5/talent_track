@@ -3,6 +3,41 @@
 <head>
     <title>TalentTrack - Geographic Analysis</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        #geography-viz {
+            height: 600px;
+            width: 100%;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+            position: relative;
+            z-index: 1;
+        }
+        /* Ensure the container has a background and proper spacing */
+        .map-container {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        .legend {
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+        }
+        .legend-item {
+            margin: 5px 0;
+        }
+        .legend-color {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+    </style>
 </head>
 <body>
     <nav>
@@ -12,12 +47,19 @@
         <a href="/pipeline">Pipeline</a>
     </nav>
     <div class="container">
-        <h1>Geographical Distribution</h1>
-        <div id="geography-viz" class="visualization" style="height: 600px;"></div>
+        <h1>Geographical Distribution of Talent</h1>
+        <div class="map-container">
+            <div id="geography-viz"></div>
+        </div>
     </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script>
-        window.onload = loadGeography;
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing map...');
+            loadGeography();
+        });
     </script>
 </body>
 </html>
