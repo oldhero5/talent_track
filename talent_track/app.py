@@ -23,29 +23,63 @@ from talent_track.functions import (
     RecruitmentVisualizer, DriftDetector
 )
 
-# Global data store class
+from talent_track.db import MongoDB
+
 class DataStore:
     def __init__(self):
+        self.db = MongoDB()
         self.data_generator = DataGenerator()
-        self.pq_model = PQModel(n_bits=8)
+        self.pq_model = self._load_or_create_model()
         self.feedback_tracker = FeedbackTracker()
         self.model_explainer = None
         self.visualizer = None
-        self.current_employees = None
-        self.leads = None
+        self._load_or_generate_data()
+
+    def _load_or_create_model(self):
+        model = self.db.load_model('pq_model')
+        if model is None:
+            model = PQModel(n_bits=8)
+        return model
+
+    def _load_or_generate_data(self):
+        candidates = self.db.load_candidates()
+        if not candidates:
+            # Generate new data
+            self.current_employees = self.data_generator.generate_dataset(1000)
+            self.leads = self.data_generator.generate_dataset(500)
+            
+            # Set statuses
+            self.current_employees['status'] = 'current_employee'
+            self.leads['status'] = np.random.choice(
+                ['screening', 'interview', 'offer_extended', 'rejected'],
+                size=len(self.leads)
+            )
+            
+            # Save to MongoDB
+            self.db.save_candidates(pd.concat([self.current_employees, self.leads]))
+        else:
+            # Load data from MongoDB
+            all_candidates = pd.DataFrame(candidates)
+            self.current_employees = all_candidates[all_candidates['status'] == 'current_employee']
+            self.leads = all_candidates[all_candidates['status'] != 'current_employee']
+
+        # Initialize model and other components
+        combined_data = pd.concat([self.current_employees, self.leads])
+        self.pq_model.fit(combined_data)
+        
+        # Save updated model
+        self.db.save_model('pq_model', self.pq_model, {
+            'n_bits': self.pq_model.n_bits,
+            'last_updated': datetime.utcnow().isoformat()
+        })
+        
+        self.visualizer = RecruitmentVisualizer(self.pq_model, self.feedback_tracker)
+        self.model_explainer = ModelExplainer(self.pq_model)
 
 def create_app(test_config=None):
-    base_dir = os.path.abspath(os.path.dirname(__file__))
-    app = Flask(__name__,
-                template_folder=os.path.join(base_dir, 'templates'),
-                static_folder=os.path.join(base_dir, 'static'))
-    
+    app = Flask(__name__)
     app.data_store = DataStore()
     register_routes(app)
-    
-    with app.app_context():
-        initialize_data(app)
-    
     return app
 
 def initialize_data(app):
@@ -411,13 +445,40 @@ def register_routes(app):
     @app.route('/pipeline')
     def pipeline():
         return render_template('pipeline.html')
+    @app.route('/api/feedback', methods=['POST'])
+    def post_feedback():
+        try:
+            data = request.get_json()
+            candidate_id = data.get('candidate_id')
+            stage = data.get('stage')
+            status = data.get('status')
+            notes = data.get('notes')
+            
+            if not candidate_id or not stage or not status:
+                return jsonify({'error': 'Missing required fields'}), 400
+                
+            feedback = {
+                'candidate_id': candidate_id,
+                'stage': stage,
+                'status': status,
+                'notes': notes,
+                'timestamp': datetime.utcnow()
+            }
+            
+            app.data_store.db.save_feedback(feedback)
+            return jsonify({'message': 'Feedback received', 'feedback': feedback}), 200
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
 
-def main():
-    app = create_app()
-    print("\n=== Starting TalentTrack Server ===")
-    print(f"Template folder: {app.template_folder}")
-    print(f"Static folder: {app.static_folder}")
-    app.run(debug=True)
+    @app.route('/api/model_metrics', methods=['POST'])
+    def save_model_metrics():
+        try:
+            metrics = request.get_json()
+            app.data_store.db.save_model_metrics(metrics)
+            return jsonify({'message': 'Metrics saved successfully'}), 200
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    main()
+    app = create_app()
+    app.run(debug=True, host='0.0.0.0')
